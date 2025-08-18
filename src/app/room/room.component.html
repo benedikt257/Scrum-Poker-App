@@ -1,0 +1,56 @@
+<!-- Show room details once the stream resolves -->
+<div class="room-container" *ngIf="room$ | async as room">
+  <h2>Room: {{ room.name }}</h2>
+  <h3>Hello, {{ currentPlayer.name }}!</h3>
+
+  <div class="players">
+    <h4>Players</h4>
+    <ul>
+      <li *ngFor="let player of room.players" [class.current-player]="isCurrent(player)">
+        <span class="player-name">{{ player.name }}</span>
+        <span class="card-display">
+          <!-- Display card depending on reveal status -->
+          <ng-container *ngIf="room.revealed; else hidden">
+            <span class="card-value">{{ player.estimate !== undefined ? player.estimate : '—' }}</span>
+          </ng-container>
+          <ng-template #hidden>
+            <!-- Before reveal, current user sees a note if selected; others see '?' -->
+            <span class="card-value">
+              {{ isCurrent(player) && player.estimate !== undefined ? 'Selected' : '?' }}
+            </span>
+          </ng-template>
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Card selection section for the current player before reveal -->
+  <div class="selection" *ngIf="!room.revealed">
+    <h4>Select your estimate</h4>
+    <div class="cards">
+      <button
+        *ngFor="let num of fibonacci"
+        (click)="selectCard(num)"
+        [class.selected]="currentSelection === num">
+        {{ num }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Host controls -->
+  <div class="host-controls">
+    <button (click)="reveal()" [disabled]="room.revealed">Reveal estimates</button>
+    <button (click)="reset()" *ngIf="room.revealed">Reset board</button>
+  </div>
+
+  <!-- Statistics visible after reveal -->
+  <div class="statistics" *ngIf="room.revealed">
+    <h4>Statistics</h4>
+    <ng-container *ngIf="getStats(room) as stats">
+      <p>Mean: {{ stats.mean }}</p>
+      <p>Standard deviation: {{ stats.sd }}</p>
+      <p>Min: {{ stats.min }}</p>
+      <p>Max: {{ stats.max }}</p>
+    </ng-container>
+  </div>
+</div>

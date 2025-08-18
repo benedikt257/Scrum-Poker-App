@@ -1,0 +1,187 @@
+openapi: 3.1.1
+info:
+  title: Scrum Poker API
+  version: 1.0.0
+  description: API for managing scrum poker rooms and estimates
+
+paths:
+  /rooms:
+    post:
+      summary: Create a new room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Optional display name of the room
+                player:
+                  $ref: '#/components/schemas/Player'
+                  description: Player creating the room
+      responses:
+        '201':
+          description: Room created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+
+  /rooms/{roomId}:
+    get:
+      summary: Get room information
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Room details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: Room not found
+
+    patch:
+      summary: Reveal or reset the board
+      description: Use this to flip cards (reveal) or clear estimates (reset)
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [reveal, reset]
+      responses:
+        '200':
+          description: Action applied, Room details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: Invalid action
+        '404':
+          description: Room not found
+
+  /rooms/{roomId}/players:
+    post:
+      summary: Join a room
+      description: Add a new player to a room. If the player already exists, it does nothing.
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json: 
+            schema:
+              type: object
+              required: [playerName, playerId]
+              properties:
+                playerName:
+                  type: string
+                  example: "Alice"
+                playerId: 
+                  type: string
+      responses:
+        '200':
+          description: Player joined (or already in room)
+        '400':
+          description: Invalid input
+        '404':
+          description: Room not found
+
+  /rooms/{roomId}/estimates:
+    put:
+      summary: Submit an estimate
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - playerId
+                - estimate
+              properties:
+                playerId:
+                  type: string
+                estimate:
+                  type: number
+                  format: int32
+      responses:
+        '200':
+          description: Estimate submitted
+        '400':
+          description: Invalid input
+        '404':
+          description: Room not found
+
+components:
+  schemas:
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        host:
+          type: string
+        revealed:
+          type: boolean
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+
+    Player:
+      type: object
+      properties:
+        name:
+          type: string
+        estimate:
+          type: number
+          format: float
+          nullable: true
+        id: 
+          type: string
+          nullable: false
+
+    Estimate:
+      type: object
+      properties:
+        playerName:
+          type: string
+        estimate:
+          type: number
+          format: float
+          nullable: true
