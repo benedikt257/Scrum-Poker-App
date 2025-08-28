@@ -20,9 +20,6 @@ paths:
                 name:
                   type: string
                   description: Optional display name of the room
-                player:
-                  $ref: '#/components/schemas/Player'
-                  description: Player creating the room
       responses:
         '201':
           description: Room created

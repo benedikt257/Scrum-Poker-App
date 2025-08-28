@@ -30,8 +30,8 @@ export class RoomService {
   /**
    * Creates a new room, adding the current player to the list of players.
    */
-  createRoom(roomName: string, playerId: string, playerName: string): Observable<Room> {
-    return this.defaultService.roomsPost({ name: roomName, player: { id: playerId, name: playerName } });
+  createRoom(roomName: string): Observable<Room> {
+    return this.defaultService.roomsPost({ name: roomName});
   }
 
   /**
