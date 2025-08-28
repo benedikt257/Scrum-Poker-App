@@ -16,7 +16,6 @@ export class HomeComponent {
   /** Name of the room the user wants to create or join */
   roomName = '';
   /** Player's name used in both create and join */
-  playerName = '';
   /** Error message displayed when join fails */
   error = '';
 
@@ -28,22 +27,21 @@ export class HomeComponent {
   onCreate() {
     this.error = '';
     const trimmedRoom = this.roomName.trim();
-    const trimmedName = this.playerName.trim();
-    if (!trimmedRoom || !trimmedName) {
-      this.error = 'Please provide both a room name and your name.';
+   
+    if (!trimmedRoom) {
+      this.error = 'Please provide a room name.';
       return;
     }
 
     const playerId = uuid.v4();
     // Persist the player's name to session storage so the room component
     // knows who the current user is.
-    sessionStorage.setItem('scrumPokerPlayerName', trimmedName);
     sessionStorage.setItem('scrumPokerPlayerId', playerId);
     // Create the room and navigate to it. Creation returns an observable
     // but we don't need to subscribe here because the room page will handle
     // updates.
     
-    this.roomService.createRoom(trimmedRoom, playerId, trimmedName)
+    this.roomService.createRoom(trimmedRoom)
     .subscribe(room => {
       console.log('room received')
       this.router.navigate(['/room', room.id]

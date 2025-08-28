@@ -1,5 +1,5 @@
 <div class="home-container">
-  <h1>Scrum Poker</h1>
+  <h1>Scrum Poker by Alessandro Lodi</h1>
   <p>Create a new room to begin your estimation session.</p>
 
   <form (ngSubmit)="onCreate()" #form="ngForm" novalidate>
@@ -11,16 +11,6 @@
         [(ngModel)]="roomName"
         required
         placeholder="e.g. sprint‑planning"
-      />
-    </div>
-    <div class="form-group">
-      <label for="playerName">Your name</label>
-      <input
-        id="playerName"
-        name="playerName"
-        [(ngModel)]="playerName"
-        required
-        placeholder="e.g. Alice"
       />
     </div>
     <div class="button-group">

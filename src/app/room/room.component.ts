@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { Observable, Subscription } from 'rxjs';
 import { Player, Room } from '../core/modules/openapi';
 import { RoomService } from '../services/room.service';
+import { v4 as uuidv4 } from 'uuid';
+import { FormsModule } from '@angular/forms';   
 
 /**
  * The room component displays a single Scrum Poker session. It shows all
@@ -12,9 +14,10 @@ import { RoomService } from '../services/room.service';
  */
 @Component({
   selector: 'app-room',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],  
   templateUrl: './room.component.html',
-  styleUrl: './room.component.css'
+  styleUrls: ['./room.component.css']
 })
 export class RoomComponent implements OnInit, OnDestroy {
   /** Id of the current room extracted from the route */
@@ -29,9 +32,15 @@ export class RoomComponent implements OnInit, OnDestroy {
   /** Observable representing the room state */
   room$?: Observable<Room>;
   /** Value selected by the player */
+
+  showInputScreen  = true;
+
   currentSelection?: number = undefined;
   /** Sequence of Fibonacci numbers available for estimation */
   readonly fibonacci = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+
+  playerName = ''; 
+  error?: string; 
 
   constructor(
     private route: ActivatedRoute,
@@ -39,34 +48,42 @@ export class RoomComponent implements OnInit, OnDestroy {
     private roomService: RoomService
   ) {}
 
-  ngOnInit(): void {
-    this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
-    if (!this.roomId) {
-      this.router.navigate(['/']);
-      return;
-    }
-
-    this.currentPlayer = {
-      name: sessionStorage.getItem('scrumPokerPlayerName') ?? '',
-      id: sessionStorage.getItem('scrumPokerPlayerId') ?? ''
-    }
-
-    const stream = this.roomService.getRoomStream(this.roomId);
-    if (!stream) {
-      // Room does not exist; redirect to home with error
-      this.router.navigate(['/']);
-      return;
-    }
-    this.room$ = stream;
-    // Ensure current player is still part of the room. If not present, add.
-    // This handles case where user refreshes page.
-    // Use joinRoom to add if missing.
-    console.log('joining now')
-    this.roomService.joinRoom(this.roomId, this.currentPlayer.id, this.currentPlayer.name)?.subscribe();
+ngOnInit(): void {
+  this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
+  if (!this.roomId) {
+    this.router.navigate(['/']);
+    return;
   }
+
+  // Se non ho nome → mostro popup per inserire i dati
+  this.showInputScreen = !(this.currentPlayer.id && this.currentPlayer.name);
+
+  this.initializeRoom();
+}
+
+
+
 
   ngOnDestroy(): void {
   }
+
+onSubmitInput(): void {
+  const name = (this.playerName ?? '').trim();
+  if (!name) {
+    this.error = 'Your name is required.';
+    return;
+  }
+
+  const playerId = this.currentPlayer.id || uuidv4();
+  
+  
+  this.currentPlayer = { id: playerId, name };
+  this.showInputScreen = false;
+  
+  this.room$ = this.roomService.joinRoom(this.roomId, playerId, name);
+  
+
+}
 
   /**
    * Determine if the given player is the current user.
@@ -74,6 +91,19 @@ export class RoomComponent implements OnInit, OnDestroy {
   isCurrent(player: Player): boolean {
     return player.id === this.currentPlayer.id;
   }
+
+
+  initializeRoom(): void {
+  const stream = this.roomService.getRoomStream(this.roomId);
+  if (!stream) {
+    this.router.navigate(['/']);
+    return;
+  }
+  this.room$ = stream;
+}
+
+
+
 
   /**
    * Handle selecting a card for the current user. Only allowed if the
